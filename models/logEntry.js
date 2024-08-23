@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const photoSchema = new mongoose.Schema({
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     imageUrl: {
         type: String,
         required: true
@@ -8,12 +13,18 @@ const photoSchema = new mongoose.Schema({
     description: {
         type: String
     },
-    comment: {
-        type: String
-    }
-});
+    comment: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
+    }],
+}, { timestamps: true });
 
 const logEntrySchema = new mongoose.Schema({
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     trip: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Trip',
@@ -32,11 +43,11 @@ const logEntrySchema = new mongoose.Schema({
         min: 0,
         max: 5
     },
-    comments: [{
+    comment: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'
     }],
-    photos: [photoSchema]
-});
+    photo: [photoSchema]
+}, { timestamps: true });
 
 module.exports = mongoose.model('LogEntry', logEntrySchema);

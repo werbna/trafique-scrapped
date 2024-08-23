@@ -1,21 +1,17 @@
 const mongoose = require("mongoose");
 
 const tripSchema = new mongoose.Schema({
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
   destination: {
     type: String,
+    unique:true,
     required: true,
   },
-  logEntries: [
+  logEntry: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "LogEntry",
     },
   ],
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Trip", tripSchema);
