@@ -1,53 +1,63 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const photoSchema = new mongoose.Schema({
+const photoSchema = new mongoose.Schema(
+  {
     author: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     imageUrl: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     description: {
-        type: String
+      type: String,
     },
-    comment: [{
+    comment: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }],
-}, { timestamps: true });
+        ref: "Comment",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-const logEntrySchema = new mongoose.Schema({
+const logEntrySchema = new mongoose.Schema(
+  {
     author: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     trip: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Trip',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Trip",
+      required: true,
     },
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     content: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     rating: {
-        type: Number,
-        min: 0,
-        max: 5
+      type: Number,
+      min: 0,
+      max: 5,
     },
-    comment: [{
+    comment: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }],
-    photo: [photoSchema]
-}, { timestamps: true });
+        ref: "Comment",
+      },
+    ],
+    photo: [photoSchema],
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('LogEntry', logEntrySchema);
+module.exports = mongoose.model("LogEntry", logEntrySchema);

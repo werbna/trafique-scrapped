@@ -25,14 +25,13 @@ const userSchema = new mongoose.Schema({
   },
   isAdmin: {
     type: Boolean,
-    default: false, // By default, users are not admins
+    default: false,
   },
 });
 
 userSchema.set("toJSON", {
   transform: (document, returnedObject) => {
     delete returnedObject.hashedPassword;
-    delete returnedObject.isAdmin;
   },
 });
 
