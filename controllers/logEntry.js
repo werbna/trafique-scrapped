@@ -88,21 +88,27 @@ router.delete('/:logEntryId', async (req,res) => {
   }
 })
 
-router.post('/photos')
-
-router.create('/:logEntryId/photos', async (req,res) => {
+router.post('/:logEntryId/photos', async (req, res) => {
   try {
-    const foundLogEntry = logEntry.findById(req.params.logEntryId)
-    if(!foundLogEntry) {
-      return res.status(404).json({ message: 'Log entry not found' })
-    const newPhoto = {
-      url: req.body.url,
-      des
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
     }
+
+    if (!Array.isArray(foundLogEntry.photos)) {
+      foundLogEntry.photos = [];
     }
+
+    req.body.author = req.user._id
+    const newPhoto = { ...req.body }
+    foundLogEntry.photos.push(newPhoto)
+    await foundLogEntry.save()
+
+    res.status(201).json(newPhoto)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
   }
 })
-module.exports = router
+
+module.exports = router;
