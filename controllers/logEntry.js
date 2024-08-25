@@ -10,8 +10,6 @@ router.get('/', async (req, res) => {
     const logEntries = await logEntry.find({})
     .populate('author')
     .sort({ createdAt: 'desc' })
-    .populate('trip')
-    .populate('photo')
     // .populate('comment')
     res.status(200).json(logEntries);
   } catch (err) {
@@ -25,8 +23,6 @@ router.get('/:logEntryId', async (req, res) => {
   try {
     const foundLogEntry = await logEntry.findById(req.params.logEntryId)
     .populate('author')
-    .populate('trip')
-    .populate('photo')
     // .populate('comment')
     if (!foundLogEntry) {
       res.status(404).json({ message: 'Log Entry not found' })
