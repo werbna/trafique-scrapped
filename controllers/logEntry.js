@@ -88,27 +88,28 @@ router.delete('/:logEntryId', async (req,res) => {
   }
 })
 
+//! Remember to add a cloudify function eventually.
 router.post('/:logEntryId/photos', async (req, res) => {
   try {
     const foundLogEntry = await logEntry.findById(req.params.logEntryId)
     if (!foundLogEntry) {
       return res.status(404).json({ message: 'Log entry not found' });
     }
+    console.log(foundLogEntry)
 
-    if (!Array.isArray(foundLogEntry.photos)) {
-      foundLogEntry.photos = [];
+    const photo = {
+      ...req.body,
+      author: req.user._id
     }
 
-    req.body.author = req.user._id
-    const newPhoto = { ...req.body }
-    foundLogEntry.photos.push(newPhoto)
+    foundLogEntry.photo.push(photo)
     await foundLogEntry.save()
-
-    res.status(201).json(newPhoto)
+    res.status(201).json(foundLogEntry)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
   }
 })
+
 
 module.exports = router;
