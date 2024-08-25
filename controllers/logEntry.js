@@ -11,7 +11,7 @@ router.get('/', async (req, res) => {
     .populate('author')
     .sort({ createdAt: 'desc' })
     .populate('trip')
-    // .populate('photo')
+    .populate('photo')
     // .populate('comment')
     res.status(200).json(logEntries);
   } catch (err) {
@@ -20,13 +20,14 @@ router.get('/', async (req, res) => {
   }
 })
 
+
 router.get('/:logEntryId', async (req, res) => {
   try {
     const foundLogEntry = await logEntry.findById(req.params.logEntryId)
-      .populate('author')
-      .populate('trip')
-      // .populate('photo')
-      // .populate('comment')
+    .populate('author')
+    .populate('trip')
+    .populate('photo')
+    // .populate('comment')
     if (!foundLogEntry) {
       res.status(404).json({ message: 'Log Entry not found' })
     }
@@ -37,6 +38,39 @@ router.get('/:logEntryId', async (req, res) => {
   }
 })
 
+router.get('/:logEntryId/photos', async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
+    }
+
+    const photos = foundLogEntry.photo;
+    res.json(photos);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
+router.get('/:logEntryId/photos/:photoId', async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
+    }
+
+    const foundPhoto = foundLogEntry.photo.id(req.params.photoId);
+    if (!foundPhoto) {
+      return res.status(404).json({ message: 'Photo not found' });
+    }
+
+    res.json(foundPhoto);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
 // ========= Protected Routes =========
 router.use(verifyToken);
 
