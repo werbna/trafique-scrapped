@@ -157,6 +157,22 @@ router.delete('/:logEntryId', async (req,res) => {
   }
 })
 
+router.delete('/:logEntryId/photos/:photoId', async (req,res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied'})
+    }
+    foundLogEntry.photo.pull(req.params.photoId)
+    await foundLogEntry.save()
+    res.status(200).json({ message: 'Photo deleted successfully' })
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+})
+
 
 
 
