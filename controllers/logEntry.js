@@ -23,7 +23,6 @@ router.get('/:logEntryId', async (req, res) => {
   try {
     const foundLogEntry = await logEntry.findById(req.params.logEntryId)
     .populate('author')
-    // .populate('comment')
     if (!foundLogEntry) {
       res.status(404).json({ message: 'Log Entry not found' })
     }
@@ -81,43 +80,6 @@ router.post('/', async (req, res) => {
     res.status(500).json(err)
   }
 })
-
-router.put('/:logEntryId', async (req,res) => {
-  try {
-
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
-    const user = await User.findById(req.user._id)
-    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied'})
-    }
-    const updatedLogEntry = await logEntry.findByIdAndUpdate(
-      req.params.logEntryId,
-      req.body,
-      { new: true }
-    )
-    updatedLogEntry._doc.author = req.user
-    res.status(200).json(updatedLogEntry)
-  } catch(err) {
-    console.log(err)
-    res.status(500).json(err)
-  }
-})
-
-router.delete('/:logEntryId', async (req,res) => {
-  try {
-    const user = await User.findById(req.user._id)
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
-    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied'})
-    }
-    const deletedLogEntry = await  logEntry.findByIdAndDelete(req.params.logEntryId)
-    res.status(200).json(deletedLogEntry)
-  } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
-  }
-})
-
 //! Remember to add a cloudify function eventually.
 router.post('/:logEntryId/photos', async (req, res) => {
   try {
@@ -140,6 +102,62 @@ router.post('/:logEntryId/photos', async (req, res) => {
     res.status(500).json(err)
   }
 })
+
+router.put('/:logEntryId', async (req,res) => {
+  try {
+
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    const user = await User.findById(req.user._id)
+    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied'})
+    }
+    const updatedLogEntry = await logEntry.findByIdAndUpdate(
+      req.params.logEntryId,
+      req.body,
+      { new: true }
+    )
+    updatedLogEntry._doc.author = req.user
+    res.status(200).json(updatedLogEntry)
+  } catch(err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+})
+
+router.put('/:logEntryId/photos/:photoId', async (req,res) => {
+  try{
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId).populate('author')
+    const user = await User.findById(req.user._id)
+    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied'})
+    }
+    const updatedPhoto = foundLogEntry.photo.id(req.params.photoId)
+    updatedPhoto.imageUrl = req.body.imageUrl
+    updatedPhoto.description = req.body.description
+    await foundLogEntry.save();
+    res.status(200).json(updatedPhoto);
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+})
+
+router.delete('/:logEntryId', async (req,res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied'})
+    }
+    const deletedLogEntry = await  logEntry.findByIdAndDelete(req.params.logEntryId)
+    res.status(200).json(deletedLogEntry)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+})
+
+
 
 
 module.exports = router;
