@@ -8,9 +8,18 @@ const commentSchema = new mongoose.Schema(
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "User"
+    }, 
+    associatedModel: {
+      type: String,
       required: true,
+      enum: ['Photo', 'LogEntry']
     },
+    associatedId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: 'associatedModel'
+    }
   },
   { timestamps: true }
 );

@@ -2,15 +2,17 @@ const express = require('express')
 const verifyToken = require('../middleware/verify-token.js')
 const logEntry = require('../models/logEntry.js')
 const User = require('../models/user.js')
+const Comment = require('../models/comment.js')
 const router = express.Router()
 
 // ========== Public Routes ===========
+
 router.get('/', async (req, res) => {
   try {
     const logEntries = await logEntry.find({})
     .populate('author')
     .sort({ createdAt: 'desc' })
-    // .populate('comment')
+    .populate('comments')
     res.status(200).json(logEntries);
   } catch (err) {
     console.log(err)
@@ -23,6 +25,7 @@ router.get('/:logEntryId', async (req, res) => {
   try {
     const foundLogEntry = await logEntry.findById(req.params.logEntryId)
     .populate('author')
+    .populate('comments')
     if (!foundLogEntry) {
       res.status(404).json({ message: 'Log Entry not found' })
     }
@@ -35,7 +38,8 @@ router.get('/:logEntryId', async (req, res) => {
 
 router.get('/:logEntryId/photos', async (req, res) => {
   try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    .populate('comments')
     if (!foundLogEntry) {
       return res.status(404).json({ message: 'Log entry not found' });
     }
@@ -50,7 +54,8 @@ router.get('/:logEntryId/photos', async (req, res) => {
 
 router.get('/:logEntryId/photos/:photoId', async (req, res) => {
   try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId)
+    .populate('comments')
     if (!foundLogEntry) {
       return res.status(404).json({ message: 'Log entry not found' });
     }
@@ -66,7 +71,9 @@ router.get('/:logEntryId/photos/:photoId', async (req, res) => {
     res.status(500).json(err);
   }
 });
+
 // ========= Protected Routes =========
+
 router.use(verifyToken);
 
 router.post('/', async (req, res) => {
@@ -80,6 +87,31 @@ router.post('/', async (req, res) => {
     res.status(500).json(err)
   }
 })
+
+router.post('/:logEntryId/comments', async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
+    }
+
+    const newComment = await Comment.create({
+      ...req.body,
+      author: req.user.id,
+      associatedModel: 'LogEntry',
+      associatedId: req.params.logEntryId
+    });
+
+    foundLogEntry.comments.push(newComment._id);
+    await foundLogEntry.save();
+
+    res.status(201).json(newComment);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
 //! Remember to add a cloudify function eventually.
 router.post('/:logEntryId/photos', async (req, res) => {
   try {
@@ -102,6 +134,37 @@ router.post('/:logEntryId/photos', async (req, res) => {
     res.status(500).json(err)
   }
 })
+
+router.post('/:logEntryId/photos/:photoId/comments', async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    console.log(foundLogEntry)
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' })
+    }
+
+    const foundPhoto = await foundLogEntry.photo.id(req.params.photoId);
+    console.log(foundPhoto)
+    if (!foundPhoto) {
+      return res.status(404).json({ message: 'Photo not found' });
+    }
+
+    const newComment = await Comment.create({
+      text: req.body.text,
+      author: req.user.id,
+      associatedModel: 'Photo',
+      associatedId: req.params.photoId
+    });
+
+    foundPhoto.comments.push(newComment._id);
+    await foundLogEntry.save();
+
+    res.status(201).json(newComment)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
+});
 
 router.put('/:logEntryId', async (req,res) => {
   try {

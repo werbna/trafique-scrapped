@@ -14,12 +14,9 @@ const photoSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    comment: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    ],
+    comments: [{
+      type: mongoose.Schema.Types.ObjectId, ref: 'Comment' 
+    }],
   },
   { timestamps: true }
 );
@@ -49,12 +46,9 @@ const logEntrySchema = new mongoose.Schema(
       min: 0,
       max: 5,
     },
-    comment: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    ],
+    comments: [{
+      type: mongoose.Schema.Types.ObjectId, ref: 'Comment' 
+    }],
     photo: [photoSchema],
   },
   { timestamps: true }
