@@ -272,6 +272,30 @@ router.put("/:logEntryId", async (req, res) => {
   }
 });
 
+router.put("/:logEntryId/comments/:commentId", async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    const user = await User.findById(req.user._id);
+    if (!foundLogEntry.author.equals(req.user._id) && !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const foundComment = await Comment.findById(req.params.commentId);
+    if (!foundComment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+    if (!foundLogEntry.comments.includes(foundComment._id)) {
+      return res.status(404).json({ message: "Comment not associated with this LogEntry" });
+    }
+    foundComment.set(req.body);
+    await foundComment.save();
+    res.status(200).json(foundComment);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
+
 router.put("/:logEntryId/photos/:photoId", async (req, res) => {
   try {
     const foundLogEntry = await logEntry
@@ -286,6 +310,35 @@ router.put("/:logEntryId/photos/:photoId", async (req, res) => {
     updatedPhoto.description = req.body.description;
     await foundLogEntry.save();
     res.status(200).json(updatedPhoto);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
+router.put("/:logEntryId/photos/:photoId/comments/:commentId", async (req, res) => {
+  try {
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    const user = await User.findById(req.user._id);
+    if (!foundLogEntry.author.equals(req.user._id) && !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const foundPhoto = foundLogEntry.photo.id(req.params.photoId);
+    if (!foundPhoto) {
+      return res.status(404).json({ message: "Photo not found" });
+    }
+    const foundComment = await Comment.findById(req.params.commentId);
+    if (!foundComment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+    console.log("Photo Comments Array:", foundPhoto.comments);
+    console.log("Found Comment ID:", foundComment._id);
+    if (!foundPhoto.comments.includes(foundComment._id)) {
+      return res.status(404).json({ message: "Comment not associated with this LogEntry" });
+    }
+    foundComment.set(req.body);
+    await foundComment.save();
+    res.status(200).json(foundComment);
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
