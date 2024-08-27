@@ -146,16 +146,11 @@ router.get("/:logEntryId/photos/:photoId/comments/:commentId", async (req, res) 
         return res.status(404).json({ message: "Log entry not found" })
       }
       const foundPhoto = foundLogEntry.photo.id(req.params.photoId)
-      console.log(`This is foundPhoto:`,foundPhoto)
       if (!foundPhoto) {
         return res.status(404).json({ message: "Photo not found" })
       }
-      // const foundComment = foundPhoto.comments.id(req.params.commentId)
-      const foundComment = foundPhoto.comments.find(
-        (comment) => comment._id.toString() === req.params.commentId
-      );
+      const foundComment = await Comment.findById(req.params.commentId)
       if (!foundComment) {
-        console.log(`This is foundComment:`, foundComment)
         return res.status(404).json({ message: "Comment not found" })
       }
       res.status(200).json(foundComment)
