@@ -24,6 +24,7 @@ router.get("/:commentId", async (req, res) => {
 
 router.use(verifyToken);
 
+
 router.post("/:logEntryId", async (req, res) => {
   try {
     const foundLogEntry = await LogEntry.findById(req.params.logEntryId);
@@ -39,6 +40,35 @@ router.post("/:logEntryId", async (req, res) => {
     });
 
     foundLogEntry.comments.push(newComment._id);
+    await foundLogEntry.save();
+
+    res.status(201).json(newComment);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
+router.post("/:logEntryId/photos/:photoId", async (req, res) => {
+  try {
+    const foundLogEntry = await LogEntry.findById(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: "Log entry not found" });
+    }
+
+    const foundPhoto = foundLogEntry.photo.id(req.params.photoId);
+    if (!foundPhoto) {
+      return res.status(404).json({ message: "Photo not found" });
+    }
+
+    const newComment = await Comment.create({
+      ...req.body,
+      author: req.user.id,
+      associatedModel: "Photo",
+      associatedId: req.params.photoId,
+    });
+
+    foundPhoto.comments.push(newComment._id);
     await foundLogEntry.save();
 
     res.status(201).json(newComment);

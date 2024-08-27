@@ -174,6 +174,30 @@ router.delete("/:logEntryId", async (req, res) => {
   }
 });
 
+router.delete("/:logEntryId/comments/:commentId", async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
+    if (!foundLogEntry.author.equals(req.user._id) || !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const foundComment = await Comment.findById(req.params.commentId);
+    if (!foundComment) {
+      return res.status(404).json({ message: "Comment not found" });
+    }
+    if (!foundLogEntry.comments.includes(foundComment._id)) {
+      return res
+        .status(404)
+        .json({ message: "Comment not associated with this LogEntry" });
+    }
+    await Comment.findByIdAndDelete(req.params.commentId);
+    res.status(200).json({ message: "Comment deleted" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+});
+
 router.delete("/:logEntryId/photos/:photoId", async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
