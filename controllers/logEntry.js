@@ -14,10 +14,10 @@ router.get("/", async (req, res) => {
       .populate("author")
       .sort({ createdAt: "desc" })
       .populate("comments");
-    res.status(200).json(logEntries)
+    res.status(200).json(logEntries);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
@@ -26,48 +26,16 @@ router.get("/:logEntryId", async (req, res) => {
     const foundLogEntry = await logEntry
       .findById(req.params.logEntryId)
       .populate("author")
-      .populate("comments")
+      .populate("comments");
     if (!foundLogEntry) {
-      res.status(404).json({ message: "Log Entry not found" })
+      res.status(404).json({ message: "Log Entry not found" });
     }
     res.status(200).json(foundLogEntry);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
-});
-
-router.get("/:logEntryId/comments", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry
-      .findById(req.params.logEntryId)
-      .populate("author")
-      .populate("comments")
-
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" })
-    }
-
-    res.status(200).json(foundLogEntry.comments)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json(err)
-  }
-});
-
-router.get("/:logEntryId/comments/:commentId", async (req, res) => {
-  try {
-    const foundComment = await Comment.findById(req.params.commentId)
-    .populate("author")
-    if (!foundComment) {
-      return res.status(404).json({ message: "Comment not found" })
-    }
-    res.status(200).json(foundComment)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json(err)
-  }
-});
+})
 
 router.get("/:logEntryId/photos", async (req, res) => {
   try {
@@ -75,14 +43,14 @@ router.get("/:logEntryId/photos", async (req, res) => {
       .findById(req.params.logEntryId)
       .populate("comments");
     if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" })
+      return res.status(404).json({ message: "Log entry not found" });
     }
 
-    const photos = foundLogEntry.photo
-    res.status(200).json(photos)
+    const photos = foundLogEntry.photo;
+    res.status(200).json(photos);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
 });
 
@@ -90,76 +58,22 @@ router.get("/:logEntryId/photos/:photoId", async (req, res) => {
   try {
     const foundLogEntry = await logEntry
       .findById(req.params.logEntryId)
-      .populate("comments")
+      .populate("comments");
     if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" })
+      return res.status(404).json({ message: "Log entry not found" });
     }
 
-    const foundPhoto = foundLogEntry.photo.id(req.params.photoId)
+    const foundPhoto = foundLogEntry.photo.id(req.params.photoId);
     if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" })
+      return res.status(404).json({ message: "Photo not found" });
     }
 
-    res.status(200).json(foundPhoto)
+    res.status(200).json(foundPhoto);
   } catch (err) {
     console.log(err);
-    res.status(500).json(err)
+    res.status(500).json(err);
   }
 });
-
-router.get("/:logEntryId/photos/:photoId/comments/", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry
-      .findById(req.params.logEntryId)
-      .populate("author")
-      .populate({
-        path: "photo.comments",
-        model: "Comment",
-      });
-
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" })
-    }
-
-    const foundPhoto = foundLogEntry.photo.id(req.params.photoId)
-    if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" })
-    }
-
-    res.status(200).json(foundPhoto.comments);
-  } catch (err) {
-    console.error(err)
-    res.status(500).json(err)
-  }
-});
-
-router.get("/:logEntryId/photos/:photoId/comments/:commentId", async (req, res) => {
-    try {
-      const foundLogEntry = await logEntry
-        .findById(req.params.logEntryId)
-        .populate("author")
-        .populate({
-          path: "photo.comments",
-          model: "Comment",
-        });
-      if (!foundLogEntry) {
-        return res.status(404).json({ message: "Log entry not found" })
-      }
-      const foundPhoto = foundLogEntry.photo.id(req.params.photoId)
-      if (!foundPhoto) {
-        return res.status(404).json({ message: "Photo not found" })
-      }
-      const foundComment = await Comment.findById(req.params.commentId)
-      if (!foundComment) {
-        return res.status(404).json({ message: "Comment not found" })
-      }
-      res.status(200).json(foundComment)
-    } catch (err) {
-      console.error(err)
-      res.status(500).json(err)
-    }
-  }
-);
 
 // ========= Protected Routes =========
 
@@ -177,29 +91,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.post("/:logEntryId/comments", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" });
-    }
-
-    const newComment = await Comment.create({
-      ...req.body,
-      author: req.user.id,
-      associatedModel: "LogEntry",
-      associatedId: req.params.logEntryId,
-    });
-
-    foundLogEntry.comments.push(newComment._id);
-    await foundLogEntry.save();
-
-    res.status(201).json(newComment);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
 
 //! Remember to add a cloudify function eventually.
 router.post("/:logEntryId/photos", async (req, res) => {
@@ -223,34 +114,6 @@ router.post("/:logEntryId/photos", async (req, res) => {
   }
 });
 
-router.post("/:logEntryId/photos/:photoId/comments", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" });
-    }
-
-    const foundPhoto = await foundLogEntry.photo.id(req.params.photoId);
-    if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" });
-    }
-
-    const newComment = await Comment.create({
-      text: req.body.text,
-      author: req.user.id,
-      associatedModel: "Photo",
-      associatedId: req.params.photoId,
-    });
-
-    foundPhoto.comments.push(newComment._id);
-    await foundLogEntry.save();
-
-    res.status(201).json(newComment);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
 
 router.put("/:logEntryId", async (req, res) => {
   try {
@@ -266,29 +129,6 @@ router.put("/:logEntryId", async (req, res) => {
     );
     updatedLogEntry._doc.author = req.user;
     res.status(200).json(updatedLogEntry);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
-
-router.put("/:logEntryId/comments/:commentId", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
-    const user = await User.findById(req.user._id);
-    if (!foundLogEntry.author.equals(req.user._id) && !user.isAdmin) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-    const foundComment = await Comment.findById(req.params.commentId);
-    if (!foundComment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-    if (!foundLogEntry.comments.includes(foundComment._id)) {
-      return res.status(404).json({ message: "Comment not associated with this LogEntry" });
-    }
-    foundComment.set(req.body);
-    await foundComment.save();
-    res.status(200).json(foundComment);
   } catch (err) {
     console.log(err);
     res.status(500).json(err);
@@ -316,34 +156,6 @@ router.put("/:logEntryId/photos/:photoId", async (req, res) => {
   }
 });
 
-router.put("/:logEntryId/photos/:photoId/comments/:commentId", async (req, res) => {
-  try {
-    const foundLogEntry = await logEntry.findById(req.params.logEntryId);
-    const user = await User.findById(req.user._id);
-    if (!foundLogEntry.author.equals(req.user._id) && !user.isAdmin) {
-      return res.status(403).json({ message: "Access denied" });
-    }
-    const foundPhoto = foundLogEntry.photo.id(req.params.photoId);
-    if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" });
-    }
-    const foundComment = await Comment.findById(req.params.commentId);
-    if (!foundComment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
-    console.log("Photo Comments Array:", foundPhoto.comments);
-    console.log("Found Comment ID:", foundComment._id);
-    if (!foundPhoto.comments.includes(foundComment._id)) {
-      return res.status(404).json({ message: "Comment not associated with this LogEntry" });
-    }
-    foundComment.set(req.body);
-    await foundComment.save();
-    res.status(200).json(foundComment);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json(err);
-  }
-});
 
 router.delete("/:logEntryId", async (req, res) => {
   try {
@@ -377,5 +189,3 @@ router.delete("/:logEntryId/photos/:photoId", async (req, res) => {
     res.status(500).json(err);
   }
 });
-
-module.exports = router;

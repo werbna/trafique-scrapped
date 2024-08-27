@@ -9,6 +9,7 @@ const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const tripsRouter = require('./controllers/trip');
 const logsRouter = require('./controllers/logEntry')
+const commentsRouter = require('./controllers/comments')
 
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -25,6 +26,7 @@ app.use('/users', usersRouter)
 app.use('/profiles', profilesRouter)
 app.use('/trips', tripsRouter)
 app.use('/logs', logsRouter)
+app.use('/comments', commentsRouter)
 
 
 app.listen(3000, () => {
