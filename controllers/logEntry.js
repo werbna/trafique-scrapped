@@ -213,3 +213,6 @@ router.delete("/:logEntryId/photos/:photoId", async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+
+module.exports = router 
