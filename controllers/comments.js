@@ -5,7 +5,8 @@ const Photo = require('../models/photo.js');
 const Trip = require('../models/trip.js')
 const User = require('../models/user.js');
 const isAdmin = require('../middleware/isAdmin.js')
-const isAuthor = require('../middleware/isAuthor.js')
+const isAuthor = require('../middleware/isAuthor.js');
+const trip = require('../models/trip.js');
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -34,15 +35,21 @@ router.get('/:commentId', async (req, res) => {
 
 router.get('/logEntries/:logEntryId/comments', async (req, res) => {
   try {
-    const foundLogEntry = await LogEntry.findById(req.params.logEntryId).populate('comments')
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: 'Log entry not found' })
+    const trip = await Trip.findOne({ 'logEntries._id': req.params.logEntryId }).populate('logEntries.comments');
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
     }
-    res.status(200).json(foundLogEntry.comments)
+    const logEntry = trip.logEntries.id(req.params.logEntryId);
+    if (!logEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
+    }
+    res.status(200).json(logEntry.comments);
   } catch (err) {
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
-})
+});
+
 
 router.get('/photos/:photoId/comments', async (req, res) => {
   try {
@@ -85,32 +92,41 @@ router.post('/photos/:photoId/comments', async (req, res) => {
 
 router.post('/logEntries/:logEntryId/comments', async (req, res) => {
   try {
-    const foundLogEntry = await LogEntry.findById(req.params.logEntryId)
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: 'Log entry not found' })
+    const trip = await Trip.findOne({ 'logEntries._id': req.params.logEntryId });
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' });
     }
-
+    const logEntry = trip.logEntries.id(req.params.logEntryId);
+    if (!logEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
+    }
     const newComment = await Comment.create({
       author: req.user._id,
       content: req.body.content,
       associatedModel: 'LogEntry',
       associatedId: req.params.logEntryId,
-    })
-
-    foundLogEntry.comments.push(newComment._id)
-    await foundLogEntry.save()
-    res.status(201).json(newComment)
+    });
+    logEntry.comments.push(newComment._id);
+    await trip.save();
+    res.status(201).json(newComment);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-})
+});
 
-router.put('/:commentId', [isAdmin, isAuthor], async (req, res) => {
+router.put('/:commentId', async (req, res) => {
   try {
     const foundComment = await Comment.findById(req.params.commentId)
     if (!foundComment) {
       return res.status(404).json({ message: 'Comment not found' })
+    }
+    const user = await User.findById(req.user._id);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied: Admin Only" });
+    }
+    if (!foundComment.author.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Access denied' });
     }
 
     foundComment.set(req.body)
@@ -122,14 +138,21 @@ router.put('/:commentId', [isAdmin, isAuthor], async (req, res) => {
   }
 })
 
-router.delete('/:commentId', [isAdmin, isAuthor], async (req, res) => {
+router.delete('/:commentId', async (req, res) => {
   try {
     const foundComment = await Comment.findById(req.params.commentId)
     if (!foundComment) {
       return res.status(404).json({ message: 'Comment not found' })
     }
+    const user = await User.findById(req.user._id);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied: Admin Only" });
+    }
+    if (!foundComment.author.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
 
-    await foundComment.remove()
+    await foundComment.deleteOne()
     res.status(200).json({ message: 'Comment deleted successfully' })
   } catch (err) {
     console.log(err)
