@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const verifyToken = require('../middleware/verify-token.js');
 const Photo = require('../models/photo.js');
 const Trip = require('../models/trip.js')
@@ -58,9 +59,9 @@ router.post('/trips/:tripId/logEntries/:logEntryId/photos', isAdminOrAuthor, asy
   }
 });
 
-router.put('/:photoId', isAdminOrAuthor, async (req, res) => {
+router.put('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', isAdminOrAuthor, async (req, res) => {
   try {
-    const foundPhoto = await Photo.findById(req.params.photoId)
+    const foundPhoto = await Photo.findByIdAndUpdate(req.params.photoId)
     if (!foundPhoto) {
       return res.status(404).json({ message: 'Photo not found' })
     }
@@ -76,17 +77,17 @@ router.put('/:photoId', isAdminOrAuthor, async (req, res) => {
 
 router.delete('/:photoId', isAdminOrAuthor, async (req, res) => {
   try {
-    const foundPhoto = await Photo.findById(req.params.photoId)
+    const foundPhoto = await Photo.findByIdAndDelete(req.params.photoId)
     if (!foundPhoto) {
       return res.status(404).json({ message: 'Photo not found' })
     }
-
-    await foundPhoto.remove()
-    res.status(200).json({ message: 'Photo deleted successfully' })
+    res.status(200).json(foundPhoto)
   } catch (err) {
-    console.log(err)
+    console.error(err);
     res.status(500).json(err)
   }
-})
+});
+
+
 
 module.exports = router
