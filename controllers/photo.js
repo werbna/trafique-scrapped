@@ -63,6 +63,51 @@ router.post('/trips/:tripId/logEntries/:logEntryId/photos', [isAdmin, isAuthor],
   }
 });
 
+const cloudinary = require('cloudinary').v2;
+const dotenv = require('dotenv');
+dotenv.config();
+
+cloudinary.config({
+  url: process.env.CLOUDINARY_URL
+});
+
+// router.post('/trips/:tripId/logEntries/:logEntryId/photos', [isAdmin, isAuthor], async (req, res) => {
+//   try {
+//     const trip = await Trip.findById(req.params.tripId);
+//     if (!trip) {
+//       return res.status(404).json({ message: 'Trip not found' });
+//     }
+//     const logEntry = trip.logEntries.id(req.params.logEntryId);
+//     if (!logEntry) {
+//       return res.status(404).json({ message: 'Log entry not found' });
+//     }
+// 
+//     //req.body.image is the uploaded image file
+//     const uploadedImage = req.body.image;
+// 
+//     //upload the image to Cloudinary
+//     cloudinary.uploader.upload(uploadedImage)
+//       .then(result => {
+//         const imageUrl = result.secure_url;
+//         const newPhoto = await Photo.create({
+//           author: req.user._id,
+//           imageUrl,
+//           ...req.body,
+//         });
+//         logEntry.photos.push(newPhoto._id);
+//         await trip.save();
+//         res.status(201).json(newPhoto);
+//       })
+//       .catch(error => {
+//         console.error(error);
+//         res.status(500).json(error);
+//       });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json(err);
+//   }
+// });
+
 
 router.put('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', [isAdmin, isAuthor], async (req, res) => {
   try {
