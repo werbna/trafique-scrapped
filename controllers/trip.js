@@ -4,7 +4,6 @@ const Trip = require('../models/trip.js');
 const User = require('../models/user.js');
 const isAdmin = require('../middleware/isAdmin.js');
 const isAuthor = require('../middleware/isAuthor.js');
-const isAdminOrAuthor = require('../middleware/isAdminOrAuthor.js')
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -75,7 +74,7 @@ router.post('/:tripId/logEntries', async (req, res) => {
   }
 })
 
-router.put('/:tripId/logEntries/:logEntryId', isAdminOrAuthor, async (req, res) => {
+router.put('/:tripId/logEntries/:logEntryId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.tripId);
     if (!trip) {
@@ -94,7 +93,7 @@ router.put('/:tripId/logEntries/:logEntryId', isAdminOrAuthor, async (req, res) 
   }
 });
 
-router.delete('/:tripId/logEntries/:logEntryId', isAdminOrAuthor, async (req, res) => {
+router.delete('/:tripId/logEntries/:logEntryId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.tripId)
     if (!trip) {
@@ -129,12 +128,9 @@ router.put('/:tripId', isAdmin, async (req, res) => {
   }
 })
 
-router.delete('/:tripId', isAdmin, async (req, res) => {
+router.delete('/:tripId', [isAdmin, isAuthor] , async (req, res) => {
   try {
     const deletedTrip = await Trip.findByIdAndDelete(req.params.tripId)
-    if (!deletedTrip) {
-      return res.status(404).json({ message: 'Trip not found' })
-    }
     res.status(200).json(deletedTrip)
   } catch (err) {
     console.log(err)

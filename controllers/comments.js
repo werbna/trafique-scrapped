@@ -4,7 +4,8 @@ const Comment = require('../models/comment.js');
 const Photo = require('../models/photo.js');
 const Trip = require('../models/trip.js')
 const User = require('../models/user.js');
-const isAdminOrAuthor = require('../middleware/isAdminOrAuthor.js')
+const isAdmin = require('../middleware/isAdmin.js')
+const isAuthor = require('../middleware/isAuthor.js')
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -105,7 +106,7 @@ router.post('/logEntries/:logEntryId/comments', async (req, res) => {
   }
 })
 
-router.put('/:commentId', isAdminOrAuthor, async (req, res) => {
+router.put('/:commentId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const foundComment = await Comment.findById(req.params.commentId)
     if (!foundComment) {
@@ -121,7 +122,7 @@ router.put('/:commentId', isAdminOrAuthor, async (req, res) => {
   }
 })
 
-router.delete('/:commentId', isAdminOrAuthor, async (req, res) => {
+router.delete('/:commentId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const foundComment = await Comment.findById(req.params.commentId)
     if (!foundComment) {

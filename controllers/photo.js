@@ -4,7 +4,8 @@ const verifyToken = require('../middleware/verify-token.js');
 const Photo = require('../models/photo.js');
 const Trip = require('../models/trip.js')
 const User = require('../models/user.js');
-const isAdminOrAuthor = require('../middleware/isAdminOrAuthor.js');
+const isAdmin = require('../middleware/isAdmin.js')
+const isAuthor = require('../middleware/isAuthor.js');
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -36,7 +37,7 @@ router.get('/:photoId', async (req, res) => {
 router.use(verifyToken)
 
 //! use cloudify or another imgur to accept uploads to and auto paste imageUrl.
-router.post('/trips/:tripId/logEntries/:logEntryId/photos', isAdminOrAuthor, async (req, res) => {
+router.post('/trips/:tripId/logEntries/:logEntryId/photos', [isAdmin, isAuthor], async (req, res) => {
   try {
     const foundTrip = await Trip.findById(req.params.tripId);
     if (!foundTrip) {
@@ -59,7 +60,7 @@ router.post('/trips/:tripId/logEntries/:logEntryId/photos', isAdminOrAuthor, asy
   }
 });
 
-router.put('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', isAdminOrAuthor, async (req, res) => {
+router.put('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const foundPhoto = await Photo.findByIdAndUpdate(req.params.photoId)
     if (!foundPhoto) {
@@ -75,8 +76,15 @@ router.put('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', isAdminOrAut
   }
 })
 
-router.delete('/:photoId', isAdminOrAuthor, async (req, res) => {
+router.delete('/trips/:tripId/logEntries/:logEntryId/photos/:photoId', [isAdmin, isAuthor] , async (req, res) => {
   try {
+    const trip = await Trip.findById(req.params.tripId);
+    const logEntry = trip.logEntries.id(req.params.logEntryId);
+    logEntry.photos = logEntry.photos.filter((photo) => {
+      return  photo._id !== req.params.photoId;
+    })
+    await trip.save()
+    console.log(req.params.photoId)
     const foundPhoto = await Photo.findByIdAndDelete(req.params.photoId)
     if (!foundPhoto) {
       return res.status(404).json({ message: 'Photo not found' })
