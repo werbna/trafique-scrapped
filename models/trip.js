@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Define the LogEntry schema
 const logEntrySchema = new mongoose.Schema({
   author: {
     type: mongoose.Schema.Types.ObjectId,

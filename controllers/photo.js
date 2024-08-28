@@ -1,7 +1,9 @@
-const express = require("express");
-const verifyToken = require("../middleware/verify-token.js");
-const Photo = require("../models/photo.js");
-const User = require("../models/user.js");
+const express = require('express');
+const verifyToken = require('../middleware/verify-token.js');
+const Photo = require('../models/photo.js');
+const Trip = require('../models/trip.js')
+const User = require('../models/user.js');
+const isAdminOrAuthor = require('../middleware/isAdminOrAuthor.js');
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -15,11 +17,11 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.get("/:photoId", async (req, res) => {
+router.get('/:photoId', async (req, res) => {
   try {
-    const foundPhoto = await Photo.findById(req.params.photoId).populate("author").populate("comments")
+    const foundPhoto = await Photo.findById(req.params.photoId).populate('author').populate('comments')
     if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" })
+      return res.status(404).json({ message: 'Photo not found' })
     }
     res.status(200).json(foundPhoto)
   } catch (err) {
@@ -32,11 +34,12 @@ router.get("/:photoId", async (req, res) => {
 
 router.use(verifyToken)
 
-router.post("/logEntries/:logEntryId/photos", async (req, res) => {
+//! use cloudify or another imgur to accept uploads to and auto paste imageUrl.
+router.post('/logEntries/:logEntryId/photos', isAdminOrAuthor, async (req, res) => {
   try {
     const foundLogEntry = await LogEntry.findById(req.params.logEntryId)
     if (!foundLogEntry) {
-      return res.status(404).json({ message: "Log entry not found" })
+      return res.status(404).json({ message: 'Log entry not found' })
     }
 
     const newPhoto = await Photo.create({
@@ -53,39 +56,31 @@ router.post("/logEntries/:logEntryId/photos", async (req, res) => {
   }
 })
 
-router.put("/:photoId", async (req, res) => {
+router.put('/:photoId', isAdminOrAuthor, async (req, res) => {
   try {
     const foundPhoto = await Photo.findById(req.params.photoId)
     if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" })
+      return res.status(404).json({ message: 'Photo not found' })
     }
 
-    if (foundPhoto.author.equals(req.user._id) || req.user.isAdmin) {
-      foundPhoto.set(req.body)
-      await foundPhoto.save()
-      return res.status(200).json(foundPhoto)
-    } else {
-      return res.status(403).json({ message: "Access denied" })
-    }
+    foundPhoto.set(req.body)
+    await foundPhoto.save()
+    res.status(200).json(foundPhoto)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
   }
 })
 
-router.delete("/:photoId", async (req, res) => {
+router.delete('/:photoId', isAdminOrAuthor, async (req, res) => {
   try {
     const foundPhoto = await Photo.findById(req.params.photoId)
     if (!foundPhoto) {
-      return res.status(404).json({ message: "Photo not found" })
+      return res.status(404).json({ message: 'Photo not found' })
     }
 
-    if (foundPhoto.author.equals(req.user._id) || req.user.isAdmin) {
-      await foundPhoto.remove()
-      res.status(200).json({ message: "Photo deleted successfully" })
-    } else {
-      return res.status(403).json({ message: "Access denied" })
-    }
+    await foundPhoto.remove()
+    res.status(200).json({ message: 'Photo deleted successfully' })
   } catch (err) {
     console.log(err)
     res.status(500).json(err)

@@ -2,6 +2,9 @@ const express = require('express');
 const verifyToken = require('../middleware/verify-token.js');
 const Trip = require('../models/trip.js');
 const User = require('../models/user.js');
+const isAdmin = require('../middleware/isAdmin.js');
+const isAuthor = require('../middleware/isAuthor.js');
+const isAdminOrAuthor = require('../middleware/isAdminOrAuthor.js')
 const router = express.Router();
 
 // ========== Public Routes ===========
@@ -35,7 +38,7 @@ router.get('/:tripId', async (req, res) => {
     }
     res.status(200).json(trip)
   } catch (err) {
-    res.status500().json(err)
+    res.status(500).json(err)
   }
 })
 
@@ -43,12 +46,8 @@ router.get('/:tripId', async (req, res) => {
 
 router.use(verifyToken)
 
-router.post('/', async (req, res) => {
+router.post('/', isAdmin, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-    if (!user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied: Admin Only' })
-    }
     const newTrip = await Trip.create(req.body)
     res.status(201).json(newTrip)
   } catch (err) {
@@ -76,32 +75,26 @@ router.post('/:tripId/logEntries', async (req, res) => {
   }
 })
 
-router.put('/:tripId/logEntries/:logEntryId', async (req, res) => {
+router.put('/:tripId/logEntries/:logEntryId', isAdminOrAuthor, async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.tripId)
+    const trip = await Trip.findById(req.params.tripId);
     if (!trip) {
-      return res.status(404).json({ message: 'Trip not found' })
+      return res.status(404).json({ message: 'Trip not found' });
     }
-
-    const logEntry = trip.logEntries.id(req.params.logEntryId)
-    if (!logEntry) {
-      return res.status(404).json({ message: 'Log entry not found' })
+    const foundLogEntry = trip.logEntries.id(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found' });
     }
-
-    if (logEntry.author.equals(req.user._id) || req.user.isAdmin) {
-      logEntry.set(req.body)
-      await trip.save()
-      return res.status(200).json(trip)
-    } else {
-      return res.status(403).json({ message: 'Access denied' })
-    }
+    foundLogEntry.set(req.body);
+    await trip.save();
+    return res.status(200).json(trip);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.log(err);
+    res.status(500).json(err);
   }
-})
+});
 
-router.delete('/:tripId/logEntries/:logEntryId', async (req, res) => {
+router.delete('/:tripId/logEntries/:logEntryId', isAdminOrAuthor, async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.tripId)
     if (!trip) {
@@ -111,24 +104,20 @@ router.delete('/:tripId/logEntries/:logEntryId', async (req, res) => {
     if (!logEntry) {
       return res.status(404).json({ message: 'Log entry not found' })
     }
-    if (logEntry.author.equals(req.user._id) || req.user.isAdmin) {
-      logEntry.remove()
-      await trip.save()
-      return res.status(200).json(trip)
-    } else {
-      return res.status(403).json({ message: 'Access denied' })
-    }
+    trip.logEntries.pull(req.params.logEntryId);
+    await trip.save()
+    return res.status(200).json(trip)
   } catch (err) {
     console.log(err)
     res.status(500).json(err)
   }
 })
 
-router.put('/:tripId', async (req, res) => {
+router.put('/:tripId', isAdmin, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-    if (!user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied: Admin Only' })
+    const trip = await Trip.findById(req.params.tripId)
+    if (!trip) {
+      return res.status(404).json({ message: 'Trip not found' })
     }
     const updatedTrip = await Trip.findByIdAndUpdate(req.params.tripId, req.body, { new: true })
     if (!updatedTrip) {
@@ -140,12 +129,8 @@ router.put('/:tripId', async (req, res) => {
   }
 })
 
-router.delete('/:tripId', async (req, res) => {
+router.delete('/:tripId', isAdmin, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-    if (!user.isAdmin) {
-      return res.status(403).json({ message: 'Access denied: Admin Only' })
-    }
     const deletedTrip = await Trip.findByIdAndDelete(req.params.tripId)
     if (!deletedTrip) {
       return res.status(404).json({ message: 'Trip not found' })

@@ -8,8 +8,8 @@ const testJWTRouter = require('./controllers/test-jwt');
 const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const tripsRouter = require('./controllers/trip');
-const photosRouter = require('./controllers/photo')
-const commentsRouter = require('./controllers/comments')
+const photosRouter = require('./controllers/photo');
+const commentsRouter = require('./controllers/comments');
 
 mongoose.connect(process.env.MONGODB_URI);
 
