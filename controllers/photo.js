@@ -35,26 +35,28 @@ router.get('/:photoId', async (req, res) => {
 router.use(verifyToken)
 
 //! use cloudify or another imgur to accept uploads to and auto paste imageUrl.
-router.post('/logEntries/:logEntryId/photos', isAdminOrAuthor, async (req, res) => {
+router.post('/trips/:tripId/logEntries/:logEntryId/photos', isAdminOrAuthor, async (req, res) => {
   try {
-    const foundLogEntry = await LogEntry.findById(req.params.logEntryId)
-    if (!foundLogEntry) {
-      return res.status(404).json({ message: 'Log entry not found' })
+    const foundTrip = await Trip.findById(req.params.tripId);
+    if (!foundTrip) {
+      return res.status(404).json({ message: 'Trip not found' });
     }
-
+    const foundLogEntry = foundTrip.logEntries.id(req.params.logEntryId);
+    if (!foundLogEntry) {
+      return res.status(404).json({ message: 'Log entry not found in the specified trip' });
+    }
     const newPhoto = await Photo.create({
       author: req.user._id,
       ...req.body,
-    })
-
-    foundLogEntry.photos.push(newPhoto._id)
-    await foundLogEntry.save()
-    res.status(201).json(newPhoto)
+    });
+    foundLogEntry.photos.push(newPhoto._id);
+    await foundTrip.save();
+    res.status(201).json(newPhoto);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.error(err);
+    res.status(500).json(err);
   }
-})
+});
 
 router.put('/:photoId', isAdminOrAuthor, async (req, res) => {
   try {
