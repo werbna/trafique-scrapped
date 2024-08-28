@@ -8,7 +8,7 @@ const testJWTRouter = require('./controllers/test-jwt');
 const usersRouter = require('./controllers/users');
 const profilesRouter = require('./controllers/profiles');
 const tripsRouter = require('./controllers/trip');
-const logsRouter = require('./controllers/logEntry')
+const photosRouter = require('./controllers/photo')
 const commentsRouter = require('./controllers/comments')
 
 mongoose.connect(process.env.MONGODB_URI);
@@ -25,7 +25,7 @@ app.use('/test-jwt', testJWTRouter)
 app.use('/users', usersRouter)
 app.use('/profiles', profilesRouter)
 app.use('/trips', tripsRouter)
-app.use('/logs', logsRouter)
+app.use('/photos', photosRouter)
 app.use('/comments', commentsRouter)
 
 
