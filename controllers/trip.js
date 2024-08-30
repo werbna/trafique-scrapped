@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const trips = await Trip.find({}).sort({ createdAt: 'desc' })
+    const trips = await Trip.find({}).sort({ createdAt: 'desc' }).populate('logEntries')
     res.status(200).json(trips)
   } catch (err) {
     res.status(500).json(err)
@@ -19,10 +19,14 @@ router.get('/', async (req, res) => {
 
 router.get('/:tripId/logEntries', async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.tripId)
+    const trip = await Trip.findById(req.params.tripId).populate([
+    'logEntries',
+    'logEntries.author'
+    ])
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' })
     }
+    console.log(trip)
     res.status(200).json(trip.logEntries)
   } catch (err) {
     res.status(500).json(err)
@@ -31,7 +35,10 @@ router.get('/:tripId/logEntries', async (req, res) => {
 
 router.get('/:tripId', async (req, res) => {
   try {
-    const trip = await Trip.findById(req.params.tripId)
+    const trip = await Trip.findById(req.params.tripId).populate([
+      'logEntries',
+      'logEntries.author'
+      ])
     if (!trip) {
       return res.status(404).json({ message: 'Trip not found' })
     }
@@ -45,7 +52,7 @@ router.get('/:tripId', async (req, res) => {
 
 router.use(verifyToken)
 
-router.post('/', isAdmin, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const newTrip = await Trip.create(req.body)
     res.status(201).json(newTrip)
@@ -112,7 +119,7 @@ router.delete('/:tripId/logEntries/:logEntryId', [isAdmin, isAuthor], async (req
   }
 })
 
-router.put('/:tripId', isAdmin, async (req, res) => {
+router.put('/:tripId', [isAdmin, isAuthor], async (req, res) => {
   try {
     const trip = await Trip.findById(req.params.tripId)
     if (!trip) {
