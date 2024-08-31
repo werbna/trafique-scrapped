@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const trips = await Trip.find({}).sort({ createdAt: 'desc' }).populate('logEntries')
+    const trips = await Trip.find({}).sort({ createdAt: 'desc' }).populate(['logEntries','logEntries.author'])
     res.status(200).json(trips)
   } catch (err) {
     res.status(500).json(err)
@@ -54,13 +54,23 @@ router.use(verifyToken)
 
 router.post('/', async (req, res) => {
   try {
-    const newTrip = await Trip.create(req.body)
-    res.status(201).json(newTrip)
+    if (!req.body.destination) { 
+      return res.status(400).json({ message: 'Destination is required' });
+    }
+    
+    const newTrip = await Trip.create({
+      ...req.body,
+      author: req.user._id
+    });
+
+    const populatedTrip = await Trip.findById(newTrip._id).populate('author');
+    res.status(201).json(populatedTrip);
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    console.error(err);
+    res.status(500).json({ message: 'Error creating trip', error: err.message });
   }
-})
+});
+
 
 router.post('/:tripId/logEntries', async (req, res) => {
   try {

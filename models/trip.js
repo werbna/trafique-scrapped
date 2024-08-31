@@ -34,6 +34,11 @@ const tripSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
+  }, 
+  author: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   logEntries: [logEntrySchema], 
 }, { timestamps: true });
